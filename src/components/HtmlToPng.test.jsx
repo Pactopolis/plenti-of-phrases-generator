@@ -8,7 +8,7 @@ import html2canvas from "html2canvas";
 vi.mock("html2canvas");
 
 describe("HtmlToPng Component", () => {
-  const mockContent = <div>Test Content</div>;
+  const mockContent = "Test Content";
 
   beforeEach(() => {
     // Reset all mocks before each test
@@ -22,7 +22,8 @@ describe("HtmlToPng Component", () => {
 
   it("renders the provided content", () => {
     render(<HtmlToPng content={mockContent} />);
-    expect(screen.getByText("Test Content")).toBeInTheDocument();
+    expect(screen.getByText("Test")).toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
   });
 
   it("renders a download button", () => {
@@ -50,9 +51,7 @@ describe("HtmlToPng Component", () => {
     ).toBeInTheDocument();
 
     // Get the resizable container
-    const container = screen
-      .getByText("Test Content")
-      .closest(".content-container");
+    const container = screen.getByText("Content").closest(".content-container");
     expect(container).toHaveStyle({
       resize: "both",
       overflow: "auto",
@@ -94,5 +93,32 @@ describe("HtmlToPng Component", () => {
     // Clean up
     createElementSpy.mockRestore();
     vi.restoreAllMocks();
+  });
+
+  it("splits string content into individually rendered words", () => {
+    render(<HtmlToPng content="One Two Three" />);
+
+    // Confirm all words appear as separate elements
+    expect(screen.getByText("One")).toBeInTheDocument();
+    expect(screen.getByText("Two")).toBeInTheDocument();
+    expect(screen.getByText("Three")).toBeInTheDocument();
+
+    // Optional: Check number of spans rendered
+    const spans = screen.getAllByText(/(One|Two|Three)/);
+    expect(spans).toHaveLength(3);
+  });
+
+  it("renders each word as a clickable element", async () => {
+    const user = userEvent.setup();
+    const content = "Words should be clickable";
+
+    render(<HtmlToPng content={content} />);
+
+    const words = content.split(" ");
+    for (const word of words) {
+      const el = screen.getByText(word);
+      expect(el).toBeInTheDocument();
+      await user.click(el); // should not throw
+    }
   });
 });
