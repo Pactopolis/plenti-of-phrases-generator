@@ -1,5 +1,12 @@
 # Docker Dev Env for JS
 
+# Run locally (Windows + WSL Ubuntu) with hot reload
+
+```sh
+npm install
+npm run dev
+```
+
 # Running tests
 
 This command builds a docker image with the code of this repository and runs the repository's tests
@@ -43,23 +50,4 @@ docker run -t my_app ./run_tests.sh
       Tests  8 passed (8)
    Start at  22:08:27
    Duration  3.74s (transform 93ms, setup 361ms, collect 282ms, tests 190ms, environment 1.95s, prepare 392ms)
-```
-
-# Running a specific test
-
-This example runs all tests matching the name "basic":
-
-```sh
-./build_docker.sh my_app
-docker run -t my_app ./run_tests.sh basic
-```
-
-
-# Running a vite dev server
-
-Run this command to enable hot reloading via docker.
-
-```sh
-./build_docker.sh my_app
-docker run --network=host -v .:/app -it my_app npm exec vite dev --host
 ```
