@@ -46,6 +46,28 @@ const HtmlToPng = ({ content }) => {
     }
   };
 
+  // Handle string content by splitting it into clickable words
+  const renderContent = () => {
+    if (typeof content === "string") {
+      return content.split(" ").map((word, index) => (
+        <span
+          key={index}
+          onClick={() => console.log(word)}
+          style={{
+            cursor: "pointer",
+            marginRight: "4px",
+            userSelect: "none",
+          }}
+        >
+          {word}
+        </span>
+      ));
+    }
+
+    // If content is a JSX element or other non-string, render it as-is
+    return content;
+  };
+
   return (
     <div
       className="html-to-png-container"
@@ -73,10 +95,12 @@ const HtmlToPng = ({ content }) => {
           ref={contentRef}
           className="content-container"
           style={{
-            padding: "20px",
+            padding: 0,
             background: "white",
             resize: "both",
             overflow: "auto",
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE 10+
             minWidth: "200px",
             minHeight: "100px",
             maxWidth: "100%",
@@ -95,9 +119,38 @@ const HtmlToPng = ({ content }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              overflow: "auto",
+              scrollbarWidth: "none", // Firefox
+              msOverflowStyle: "none", // IE 10+
             }}
           >
-            {content}
+            <p
+              style={{
+                fontSize: "20px",
+                color: "black",
+                margin: 0, // Remove default margin
+                padding: 0, // Ensure no padding
+                lineHeight: 1.2, // Optional: tight line spacing
+                maxWidth: "100%",
+                textAlign: "center",
+                overflowWrap: "break-word",
+              }}
+            >
+              {typeof content === "string"
+                ? content.split(" ").map((word, index) => (
+                    <span
+                      key={index}
+                      onClick={() => console.log(word)}
+                      style={{
+                        cursor: "pointer",
+                        userSelect: "none",
+                      }}
+                    >
+                      {word + " "}
+                    </span>
+                  ))
+                : content}
+            </p>
           </div>
         </div>
       </div>

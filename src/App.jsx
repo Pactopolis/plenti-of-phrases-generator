@@ -14,11 +14,7 @@ function App() {
   return (
     <div className="app">
       <h1>HTML to PNG Converter</h1>
-      <HtmlToPng
-        content={
-          <p style={{ fontSize: "20px", color: "black" }}>{loremIpsumText}</p>
-        }
-      />
+      <HtmlToPng content={loremIpsumText} />
     </div>
   );
 }
