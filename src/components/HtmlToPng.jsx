@@ -97,6 +97,8 @@ const HtmlToPng = ({ content }) => {
           style={{
             padding: 0,
             background: "white",
+            borderRadius: "8px",
+            border: "1px solid rgba(0, 0, 0, 0.1)",
             resize: "both",
             overflow: "auto",
             scrollbarWidth: "none", // Firefox
