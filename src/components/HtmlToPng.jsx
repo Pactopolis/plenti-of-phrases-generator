@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import html2canvas from "html2canvas";
 
-const HtmlToPng = ({ content }) => {
+const HtmlToPng = ({ content, textColor }) => {
   const contentRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -129,7 +129,7 @@ const HtmlToPng = ({ content }) => {
             <p
               style={{
                 fontSize: "20px",
-                color: "black",
+                color: textColor || "black",
                 margin: 0, // Remove default margin
                 padding: 0, // Ensure no padding
                 lineHeight: 1.2, // Optional: tight line spacing
