@@ -3,18 +3,29 @@ import "./App.css";
 import HtmlToPng from "./components/HtmlToPng";
 
 function App() {
-  const loremIpsumText = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-    commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-    velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-    occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-    mollit anim id est laborum.`;
+  const [inputText, setInputText] = useState("");
 
   return (
     <div className="app">
       <h1>HTML to PNG Converter</h1>
-      <HtmlToPng content={loremIpsumText} />
+      <input
+        type="text"
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+        placeholder="Type your text here..."
+        style={{
+          width: "100%",
+          padding: "10px",
+          marginBottom: "20px",
+          fontSize: "16px",
+          borderRadius: "4px",
+          border: "1px solid #ccc",
+          boxSizing: "border-box",
+        }}
+      />
+      <HtmlToPng
+        content={inputText || "Type something above to see it rendered here..."}
+      />
     </div>
   );
 }
