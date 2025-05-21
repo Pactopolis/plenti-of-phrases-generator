@@ -13,17 +13,21 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
     const originalTransform = node.style.transform;
     const originalPosition = node.style.position;
     const originalLeft = node.style.left;
+    const originalBackground = node.style.background;
+    const originalBorder = node.style.border;
 
     // Disable transform temporarily
     node.style.transform = "none";
     node.style.position = "relative";
     node.style.left = "0";
+    node.style.background = "transparent";
+    node.style.border = "none";
 
     try {
       const rect = node.getBoundingClientRect();
 
       const canvas = await html2canvas(node, {
-        backgroundColor: "white",
+        backgroundColor: null,
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -43,6 +47,8 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
       node.style.transform = originalTransform;
       node.style.position = originalPosition;
       node.style.left = originalLeft;
+      node.style.background = originalBackground;
+      node.style.border = originalBorder;
     }
   };
 

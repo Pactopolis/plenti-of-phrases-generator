@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import HtmlToPng from "./HtmlToPng";
@@ -69,7 +69,7 @@ describe("HtmlToPng Component", () => {
     expect(html2canvas).toHaveBeenCalledWith(
       container,
       expect.objectContaining({
-        backgroundColor: "white",
+        backgroundColor: null,
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -81,6 +81,51 @@ describe("HtmlToPng Component", () => {
 
     createElementSpy.mockRestore();
     vi.restoreAllMocks();
+  });
+
+  it("temporarily sets transparent background and no border for PNG generation", async () => {
+    const user = userEvent.setup();
+
+    // Create a mock canvas promise we can resolve manually
+    let resolveCanvas;
+    const canvasPromise = new Promise((resolve) => {
+      resolveCanvas = () =>
+        resolve({
+          toDataURL: () => "mock-data-url",
+        });
+    });
+
+    // Use the manually controlled promise in the mock
+    html2canvas.mockReturnValue(canvasPromise);
+
+    render(<HtmlToPng content="Temporary Styles Test" />);
+
+    const downloadButton = screen.getByRole("button", {
+      name: /download as png/i,
+    });
+
+    const contentDiv = document.querySelector(".content-container");
+
+    // Set initial inline styles for accurate restoration check
+    contentDiv.style.background = "white";
+    contentDiv.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+
+    // trigger download
+    await user.click(downloadButton);
+
+    // check temporary styles before resolving canvas
+    const tempStyle = getComputedStyle(contentDiv);
+    expect(tempStyle.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(tempStyle.border).toBe("");
+
+    resolveCanvas();
+
+    // check restored styles after PNG generation finishes
+    await waitFor(() => {
+      const restored = getComputedStyle(contentDiv);
+      expect(restored.backgroundColor).toBe("rgb(255, 255, 255)");
+      expect(restored.border).toBe("1px solid rgba(0, 0, 0, 0.1)");
+    });
   });
 
   it("splits string content into individually rendered words", () => {
