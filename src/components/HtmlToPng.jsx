@@ -1,77 +1,120 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
+import JSZip from "jszip";
 
-const HtmlToPng = ({ content, textColor, fontWeight }) => {
+const HtmlToPng = ({ content, textColor, fontWeight, words = [] }) => {
   const contentRef = useRef(null);
-  const containerRef = useRef(null);
+  const hiddenWrapperRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 500, height: 300 });
 
-  const handleDownload = async () => {
-    const node = contentRef.current;
-    if (!node) return;
+  // Track dimensions of the resizable content box
+  useEffect(() => {
+    if (!contentRef.current) return;
 
-    // Store original styles
-    const originalTransform = node.style.transform;
-    const originalPosition = node.style.position;
-    const originalLeft = node.style.left;
-    const originalBackground = node.style.background;
-    const originalBorder = node.style.border;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width: Math.round(width), height: Math.round(height) });
+      }
+    });
 
-    // Disable transform temporarily
-    node.style.transform = "none";
-    node.style.position = "relative";
-    node.style.left = "0";
-    node.style.background = "transparent";
-    node.style.border = "none";
+    resizeObserver.observe(contentRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    try {
-      const rect = node.getBoundingClientRect();
+  // Core image rendering logic (used by zip and single)
+  const renderImageFromText = async (text) => {
+    if (!contentRef.current || !hiddenWrapperRef.current) return null;
 
-      const canvas = await html2canvas(node, {
-        backgroundColor: null,
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: rect.width,
-        height: rect.height,
-      });
+    // Create a fresh div instead of cloning (ensures styling is consistent)
+    const container = document.createElement("div");
 
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = "content.png";
-      link.click();
-    } catch (error) {
-      console.error("Error generating PNG:", error);
-    } finally {
-      // Restore original styles
-      node.style.transform = originalTransform;
-      node.style.position = originalPosition;
-      node.style.left = originalLeft;
-      node.style.background = originalBackground;
-      node.style.border = originalBorder;
-    }
+    Object.assign(container.style, {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background: "transparent",
+      width: `${dimensions.width}px`,
+      height: `${dimensions.height}px`,
+      position: "absolute",
+      left: "-9999px",
+      top: "0",
+      overflow: "hidden",
+      fontSize: "20px",
+      color: textColor || "black",
+      fontWeight: fontWeight || 400,
+      lineHeight: "1.2",
+      textAlign: "center",
+      padding: "0",
+      margin: "0",
+      fontFamily: "inherit",
+    });
+
+    const p = document.createElement("p");
+    p.innerText = text;
+    Object.assign(p.style, {
+      margin: "0",
+      padding: "0",
+      maxWidth: "100%",
+      overflowWrap: "break-word",
+    });
+
+    container.appendChild(p);
+
+    hiddenWrapperRef.current.innerHTML = "";
+    hiddenWrapperRef.current.appendChild(container);
+
+    await new Promise((res) => requestAnimationFrame(res));
+
+    const canvas = await html2canvas(container, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      width: dimensions.width,
+      height: dimensions.height,
+    });
+
+    const finalCanvas = document.createElement("canvas");
+    finalCanvas.width = dimensions.width;
+    finalCanvas.height = dimensions.height;
+    const ctx = finalCanvas.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, dimensions.width, dimensions.height);
+
+    return finalCanvas.toDataURL("image/png");
   };
 
-  // Handle string content by splitting it into clickable words
-  const renderContent = () => {
-    if (typeof content === "string") {
-      return content.split(" ").map((word, index) => (
-        <span
-          key={index}
-          onClick={() => console.log(word)}
-          style={{
-            cursor: "pointer",
-            marginRight: "4px",
-            userSelect: "none",
-          }}
-        >
-          {word}
-        </span>
-      ));
-    }
+  const handleDownload = async () => {
+    const zip = new JSZip();
+    const hasPlaceholder =
+      typeof content === "string" && content.includes("!{word}");
 
-    // If content is a JSX element or other non-string, render it as-is
-    return content;
+    if (hasPlaceholder && words.length > 0) {
+      for (const word of words) {
+        const renderedText = content.replace(/!\{word\}/g, word);
+        const dataUrl = await renderImageFromText(renderedText);
+        if (dataUrl) {
+          zip.file(`${word}.png`, dataUrl.split(",")[1], { base64: true });
+        }
+      }
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "word_images.zip";
+      a.click();
+    } else {
+      const dataUrl = await renderImageFromText(
+        typeof content === "string" ? content : content?.toString?.() || ""
+      );
+
+      if (dataUrl) {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = "content.png";
+        link.click();
+      }
+    }
   };
 
   return (
@@ -86,8 +129,8 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
         padding: "20px 0",
       }}
     >
+      {/* UI Display */}
       <div
-        ref={containerRef}
         style={{
           position: "relative",
           width: "100%",
@@ -107,8 +150,8 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
             border: "1px solid rgba(0, 0, 0, 0.1)",
             resize: "both",
             overflow: "auto",
-            scrollbarWidth: "none", // Firefox
-            msOverflowStyle: "none", // IE 10+
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
             minWidth: "200px",
             minHeight: "100px",
             maxWidth: "100%",
@@ -118,51 +161,41 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
             position: "absolute",
             left: "50%",
             transform: "translateX(-50%)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <div
+          <p
             style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "auto",
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE 10+
+              fontSize: "20px",
+              color: textColor || "black",
+              fontWeight: fontWeight || 400,
+              margin: 0,
+              padding: 0,
+              lineHeight: 1.2,
+              maxWidth: "100%",
+              textAlign: "center",
+              overflowWrap: "break-word",
             }}
           >
-            <p
-              style={{
-                fontSize: "20px",
-                color: textColor || "black",
-                fontWeight: fontWeight || 400,
-                margin: 0, // Remove default margin
-                padding: 0, // Ensure no padding
-                lineHeight: 1.2, // Optional: tight line spacing
-                maxWidth: "100%",
-                textAlign: "center",
-                overflowWrap: "break-word",
-              }}
-            >
-              {typeof content === "string"
-                ? content.split(" ").map((word, index) => (
-                    <span
-                      key={index}
-                      onClick={() => console.log(word)}
-                      style={{
-                        cursor: "pointer",
-                        userSelect: "none",
-                      }}
-                    >
-                      {word + " "}
-                    </span>
-                  ))
-                : content}
-            </p>
-          </div>
+            {typeof content === "string" ? content : content}
+          </p>
         </div>
       </div>
+
+      {/* Resolution Label */}
+      <div style={{ marginTop: "8px", fontSize: "14px", color: "#555" }}>
+        {dimensions.width} × {dimensions.height}
+      </div>
+
+      {/* Offscreen Clone for PNG */}
+      <div
+        ref={hiddenWrapperRef}
+        style={{ position: "absolute", top: "-9999px", left: "-9999px" }}
+      />
+
+      {/* Download Button */}
       <button
         onClick={handleDownload}
         style={{
@@ -177,6 +210,8 @@ const HtmlToPng = ({ content, textColor, fontWeight }) => {
       >
         Download as PNG
       </button>
+
+      {/* UI Tip */}
       <div
         style={{
           fontSize: "12px",

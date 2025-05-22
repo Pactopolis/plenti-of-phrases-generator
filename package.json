@@ -13,6 +13,7 @@
   "dependencies": {
     "html2canvas": "^1.4.1",
     "jest": "^29.7.0",
+    "jszip": "^3.10.1",
     "react": "^19.0.0",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.0.0",

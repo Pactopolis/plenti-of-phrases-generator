@@ -3,11 +3,13 @@ import "./App.css";
 import HtmlToPng from "./components/HtmlToPng";
 import ColorPicker from "./components/ColorPicker";
 import BoldSlider from "./components/BoldSlider";
+import WordList from "./components/WordList";
 
 function App() {
   const [inputText, setInputText] = useState("");
   const [textColor, setTextColor] = useState("#000000");
   const [fontWeight, setFontWeight] = useState(400);
+  const [words, setWords] = useState([]);
 
   return (
     <div className="app">
@@ -39,11 +41,13 @@ function App() {
       >
         <ColorPicker onColorChange={setTextColor} />
         <BoldSlider onWeightChange={setFontWeight} />
+        <WordList onChange={setWords} />
       </div>
       <HtmlToPng
         content={inputText || "Type something above to see it rendered here..."}
         textColor={textColor}
         fontWeight={fontWeight}
+        words={words}
       />
     </div>
   );
