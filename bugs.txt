@@ -1,0 +1,2 @@
+- clicking on a button twice flashes the popup div
+- click and drag should not overlap buttons
