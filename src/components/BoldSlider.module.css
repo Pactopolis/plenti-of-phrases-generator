@@ -11,6 +11,10 @@
   font-size: 20px;
 }
 
+.button:hover {
+  color: #007bff;
+}
+
 .sliderContainer {
   position: absolute;
   top: 100%;

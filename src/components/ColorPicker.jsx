@@ -65,14 +65,7 @@ function ColorPicker({ onColorChange }) {
     <div className={styles.colorPickerContainer}>
       <button
         onClick={() => setShowColorPicker((prev) => !prev)}
-        style={{
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: "5px",
-          color: "rgba(255,255,255,0.87)",
-          fontSize: "20px",
-        }}
+        className={styles.colorButton}
         title="Change color"
       >
         <FaPalette />
@@ -80,20 +73,13 @@ function ColorPicker({ onColorChange }) {
 
       {showColorPicker && (
         <div ref={colorPickerRef} className={styles.pickerPopup}>
-          <div style={{ flex: 1 }}>
+          <div className={styles.colorPickerContent}>
             <HexColorPicker
               color={tempColor}
               onChange={setTempColor}
               onMouseUp={() => handleColorChangeComplete(tempColor)}
             />
-            <div
-              style={{
-                marginTop: "10px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-            >
+            <div className={styles.inputsContainer}>
               {/* Hex Input */}
               <div className={styles.inputGroup}>
                 <label htmlFor="hex-input" className={styles.label}>
