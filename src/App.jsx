@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useState } from "react";
 import "./App.css";
 import HtmlToPng from "./components/HtmlToPng";
@@ -9,7 +10,7 @@ function App() {
   const [inputText, setInputText] = useState("");
   const [textColor, setTextColor] = useState("#000000");
   const [fontWeight, setFontWeight] = useState(400);
-  const [words, setWords] = useState([]);
+  const [wordList, setWordList] = useState([]);
 
   return (
     <div className="app">
@@ -18,7 +19,7 @@ function App() {
         type="text"
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        placeholder="Type your text here..."
+        placeholder="Type your text here... Use !{word} to insert words from your list"
         style={{
           width: "100%",
           padding: "10px",
@@ -41,13 +42,13 @@ function App() {
       >
         <ColorPicker onColorChange={setTextColor} />
         <BoldSlider onWeightChange={setFontWeight} />
-        <WordList onChange={setWords} />
+        <WordList onWordListChange={setWordList} />
       </div>
       <HtmlToPng
         content={inputText || "Type something above to see it rendered here..."}
         textColor={textColor}
         fontWeight={fontWeight}
-        words={words}
+        wordList={wordList}
       />
     </div>
   );

@@ -1,86 +1,86 @@
+// src/components/WordList.jsx
 import { useState, useRef, useEffect } from "react";
 import { FaListUl } from "react-icons/fa";
 import styles from "./WordList.module.css";
 
-function WordList({ onChange }) {
-  const [showModal, setShowModal] = useState(false);
+function WordList({ onWordListChange }) {
+  const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [tags, setTags] = useState([]);
+  const [wordList, setWordList] = useState([]);
   const inputRef = useRef(null);
-  const modalRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        setShowModal(false);
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setShowInput(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleAddTag = (e) => {
-    if (e.key === "Enter" && inputValue.trim()) {
-      e.preventDefault();
-      const newTag = inputValue.trim();
-      setTags((prev) => {
-        const updated = [...new Set([...prev, newTag])].sort((a, b) =>
-          a.localeCompare(b)
-        );
-        onChange?.(updated);
-        return updated;
-      });
+  useEffect(() => {
+    if (showInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showInput]);
+
+  useEffect(() => {
+    onWordListChange?.(wordList);
+  }, [wordList, onWordListChange]);
+
+  const handleAddWord = (e) => {
+    e.preventDefault();
+    if (inputValue.trim()) {
+      const newList = [...wordList, inputValue.trim()].sort();
+      setWordList(newList);
       setInputValue("");
-      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
-  const handleRemoveTag = (tagToRemove) => {
-    setTags((prev) => {
-      const updated = prev.filter((tag) => tag !== tagToRemove);
-      onChange?.(updated);
-      return updated;
-    });
+  const handleRemoveWord = (wordToRemove) => {
+    setWordList(wordList.filter((word) => word !== wordToRemove));
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} ref={containerRef}>
       <button
         className={styles.button}
-        title="Add words"
-        onClick={() => setShowModal((prev) => !prev)}
+        title="Manage word list"
+        onClick={() => setShowInput((prev) => !prev)}
       >
         <FaListUl />
       </button>
 
-      {showModal && (
-        <div ref={modalRef} className={styles.modal}>
-          <div className={styles.inner}>
-            <div className={styles.wrapper}>
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleAddTag}
-                placeholder="Type a word and press Enter..."
-                className={styles.input}
-              />
-              <div className={styles.tagContainer}>
-                {tags.map((tag) => (
-                  <div key={tag} className={styles.tag}>
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveTag(tag)}
-                      className={styles.removeButton}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+      {showInput && (
+        <div className={styles.inputContainer}>
+          <form onSubmit={handleAddWord}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Add word or phrase..."
+              className={styles.input}
+            />
+          </form>
+
+          {wordList.length > 0 && (
+            <div className={styles.wordListContainer}>
+              {wordList.map((word, index) => (
+                <div key={index} className={styles.wordItem}>
+                  <span>{word}</span>
+                  <button
+                    className={styles.removeButton}
+                    onClick={() => handleRemoveWord(word)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

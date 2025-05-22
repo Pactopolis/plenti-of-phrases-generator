@@ -1,11 +1,16 @@
+// src/components/HtmlToPng.test.jsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import HtmlToPng from "./HtmlToPng";
 import html2canvas from "html2canvas";
+import { saveAs } from "file-saver";
 
-// Mock html2canvas
 vi.mock("html2canvas");
+
+vi.mock("file-saver", () => ({
+  saveAs: vi.fn(),
+}));
 
 describe("HtmlToPng Component", () => {
   const mockContent = "Resize PNG";
@@ -18,9 +23,11 @@ describe("HtmlToPng Component", () => {
 
     vi.mocked(html2canvas).mockResolvedValue({
       toDataURL: vi.fn().mockReturnValue(mockedImage),
+      toBlob: vi.fn().mockImplementation((cb) => {
+        cb(new Blob(["mock image"], { type: "image/png" }));
+      }),
     });
 
-    // Full mock of createElement
     vi.spyOn(document, "createElement").mockImplementation((tag) => {
       if (tag === "a") {
         return {
@@ -34,6 +41,9 @@ describe("HtmlToPng Component", () => {
             drawImage: vi.fn(),
           }),
           toDataURL: vi.fn().mockReturnValue(mockedImage),
+          toBlob: vi.fn().mockImplementation((cb) => {
+            cb(new Blob(["mock image"], { type: "image/png" }));
+          }),
           width: 500,
           height: 300,
         };
@@ -49,7 +59,8 @@ describe("HtmlToPng Component", () => {
 
   it("renders the provided content", () => {
     render(<HtmlToPng content={mockContent} />);
-    expect(screen.getByText(/resize png/i)).toBeInTheDocument();
+    expect(screen.getByText("Resize")).toBeInTheDocument();
+    expect(screen.getByText("PNG")).toBeInTheDocument();
   });
 
   it("renders a download button", () => {
@@ -62,10 +73,10 @@ describe("HtmlToPng Component", () => {
     const user = userEvent.setup();
 
     render(<HtmlToPng content={mockContent} />);
-
     const downloadButton = screen.getByRole("button", {
       name: /download as png/i,
     });
+
     await user.click(downloadButton);
 
     await waitFor(() => {
@@ -75,35 +86,17 @@ describe("HtmlToPng Component", () => {
 
   it("generates a zip with one image per word when !{word} is present", async () => {
     const user = userEvent.setup();
-    const createObjectURLMock = vi.fn().mockReturnValue("blob-url");
-    const clickMock = vi.fn();
 
-    global.URL.createObjectURL = createObjectURLMock;
+    render(<HtmlToPng content={placeholderContent} wordList={mockWords} />);
 
-    const mockAnchor = { href: "", download: "", click: clickMock };
-    vi.spyOn(document, "createElement").mockImplementation((tag) => {
-      if (tag === "a") return mockAnchor;
-      if (tag === "canvas") {
-        return {
-          getContext: vi.fn().mockReturnValue({ drawImage: vi.fn() }),
-          toDataURL: vi.fn().mockReturnValue(mockedImage),
-          width: 500,
-          height: 300,
-        };
-      }
-      return document.__proto__.createElement.call(document, tag);
-    });
-
-    render(<HtmlToPng content={placeholderContent} words={mockWords} />);
     const downloadButton = screen.getByRole("button", {
-      name: /download as png/i,
+      name: /download as zip/i,
     });
     await user.click(downloadButton);
 
     await waitFor(() => {
       expect(html2canvas).toHaveBeenCalledTimes(mockWords.length);
-      expect(createObjectURLMock).toHaveBeenCalled();
-      expect(clickMock).toHaveBeenCalled();
+      expect(saveAs).toHaveBeenCalled();
     });
   });
 });
