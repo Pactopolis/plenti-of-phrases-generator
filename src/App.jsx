@@ -6,10 +6,13 @@ import ColorPicker from "./components/ColorPicker";
 import BoldSlider from "./components/BoldSlider";
 import WordList from "./components/WordList";
 import WordsUpload from "./components/WordsUpload";
+import FontSelector from "./components/FontSelector";
+
 function App() {
   const [inputText, setInputText] = useState("");
   const [textColor, setTextColor] = useState("#000000");
   const [fontWeight, setFontWeight] = useState(400);
+  const [fontFamily, setFontFamily] = useState("Arial");
   const [wordList, setWordList] = useState([]);
 
   const handleFileDrop = (e) => {
@@ -61,6 +64,7 @@ function App() {
       >
         <ColorPicker onColorChange={setTextColor} />
         <BoldSlider onWeightChange={setFontWeight} />
+        <FontSelector onFontChange={setFontFamily} />
         <WordList onWordListChange={setWordList} wordList={wordList} />
         <WordsUpload onWordListChange={setWordList} wordList={wordList} />
       </div>
@@ -68,6 +72,7 @@ function App() {
         content={inputText || "Type something above to see it rendered here..."}
         textColor={textColor}
         fontWeight={fontWeight}
+        fontFamily={fontFamily}
         wordList={wordList}
       />
     </div>

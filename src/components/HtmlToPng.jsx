@@ -4,7 +4,13 @@ import html2canvas from "html2canvas";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
-const HtmlToPng = ({ content, textColor, fontWeight, wordList = [] }) => {
+const HtmlToPng = ({
+  content,
+  textColor,
+  fontWeight,
+  fontFamily,
+  wordList = [],
+}) => {
   const contentRef = useRef(null);
   const containerRef = useRef(null);
   const [renderedContent, setRenderedContent] = useState(content);
@@ -224,6 +230,7 @@ const HtmlToPng = ({ content, textColor, fontWeight, wordList = [] }) => {
                 fontSize: "20px",
                 color: textColor || "black",
                 fontWeight: fontWeight || 400,
+                fontFamily: fontFamily || "Arial",
                 margin: 0, // Remove default margin
                 padding: 0, // Ensure no padding
                 lineHeight: 1.2, // Optional: tight line spacing

@@ -69,6 +69,46 @@ describe("HtmlToPng Component", () => {
     expect(button).toBeInTheDocument();
   });
 
+  it("applies the default font family when none is provided", () => {
+    render(<HtmlToPng content={mockContent} />);
+    const textElement = screen.getByText("Resize");
+    expect(textElement.parentElement).toHaveStyle({ fontFamily: "Arial" });
+  });
+
+  it("applies the provided font family", () => {
+    const customFont = "Times New Roman";
+    render(<HtmlToPng content={mockContent} fontFamily={customFont} />);
+    const textElement = screen.getByText("Resize");
+    expect(textElement.parentElement).toHaveStyle({ fontFamily: customFont });
+  });
+
+  it("maintains font family when generating multiple images", async () => {
+    const customFont = "Georgia";
+    const user = userEvent.setup();
+
+    render(
+      <HtmlToPng
+        content={placeholderContent}
+        wordList={mockWords}
+        fontFamily={customFont}
+      />
+    );
+
+    const downloadButton = screen.getByRole("button", {
+      name: /download as zip/i,
+    });
+    await user.click(downloadButton);
+
+    await waitFor(() => {
+      expect(html2canvas).toHaveBeenCalledTimes(mockWords.length);
+      expect(saveAs).toHaveBeenCalled();
+    });
+
+    // Verify font family is maintained in the rendered content
+    const textElement = screen.getByText(/This/);
+    expect(textElement.parentElement).toHaveStyle({ fontFamily: customFont });
+  });
+
   it("supports resizing and PNG creation after resize", async () => {
     const user = userEvent.setup();
 
