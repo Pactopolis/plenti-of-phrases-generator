@@ -3,10 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import { FaListUl } from "react-icons/fa";
 import styles from "./WordList.module.css";
 
-function WordList({ onWordListChange }) {
+function WordList({ onWordListChange, wordList = [] }) {
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [wordList, setWordList] = useState([]);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -26,21 +25,17 @@ function WordList({ onWordListChange }) {
     }
   }, [showInput]);
 
-  useEffect(() => {
-    onWordListChange?.(wordList);
-  }, [wordList, onWordListChange]);
-
   const handleAddWord = (e) => {
     e.preventDefault();
     if (inputValue.trim()) {
       const newList = [...wordList, inputValue.trim()].sort();
-      setWordList(newList);
+      onWordListChange?.(newList);
       setInputValue("");
     }
   };
 
   const handleRemoveWord = (wordToRemove) => {
-    setWordList(wordList.filter((word) => word !== wordToRemove));
+    onWordListChange?.(wordList.filter((word) => word !== wordToRemove));
   };
 
   return (

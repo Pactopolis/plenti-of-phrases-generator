@@ -5,12 +5,29 @@ import HtmlToPng from "./components/HtmlToPng";
 import ColorPicker from "./components/ColorPicker";
 import BoldSlider from "./components/BoldSlider";
 import WordList from "./components/WordList";
-
+import WordsUpload from "./components/WordsUpload";
 function App() {
   const [inputText, setInputText] = useState("");
   const [textColor, setTextColor] = useState("#000000");
   const [fontWeight, setFontWeight] = useState(400);
   const [wordList, setWordList] = useState([]);
+
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith(".words")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const words = event.target.result.split(",").map((word) => word.trim());
+        setWordList((prevList) => [...new Set([...prevList, ...words])].sort());
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="app">
@@ -19,7 +36,9 @@ function App() {
         type="text"
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        placeholder="Type your text here... Use !{word} to insert words from your list"
+        onDrop={handleFileDrop}
+        onDragOver={handleDragOver}
+        placeholder="Type your text here..."
         style={{
           width: "100%",
           padding: "10px",
@@ -42,7 +61,8 @@ function App() {
       >
         <ColorPicker onColorChange={setTextColor} />
         <BoldSlider onWeightChange={setFontWeight} />
-        <WordList onWordListChange={setWordList} />
+        <WordList onWordListChange={setWordList} wordList={wordList} />
+        <WordsUpload onWordListChange={setWordList} wordList={wordList} />
       </div>
       <HtmlToPng
         content={inputText || "Type something above to see it rendered here..."}
