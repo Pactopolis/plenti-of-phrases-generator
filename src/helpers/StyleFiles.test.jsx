@@ -15,7 +15,7 @@ describe("StyleFiles Module", () => {
   it("matches words ending in 'ing'", () => {
     const yamlText = `
 type: regex
-pattern: "\\\\b\\\\w+ing\\\\b"
+pattern: '\\b\\w+ing\\b'
 style:
   color: purple
 `;
@@ -37,7 +37,7 @@ style:
   it("matches dollar amounts like $12.34", () => {
     const yamlText = `
 type: regex
-pattern: "\\\\$\\\\d+(\\\\.\\\\d{2})?"
+pattern: '\\$\\d+(\\.\\d{2})?'
 style:
   color: green
   fontWeight: bold
@@ -59,7 +59,7 @@ style:
   it("matches hashtags like #lunch and #coffee", () => {
     const yamlText = `
 type: regex
-pattern: "#\\\\w+"
+pattern: '#\\w+'
 style:
   color: blue
   textDecoration: underline
@@ -82,7 +82,7 @@ style:
     const text = "The quick brown fox jumps over the lazy dog";
     const yamlText = `
 type: regex
-pattern: "\\\\b(f\\\\w+|lazy)\\\\b"
+pattern: '\\b(f\\w+|lazy)\\b'
 style:
   color: orange
 `;
