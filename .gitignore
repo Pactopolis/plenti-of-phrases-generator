@@ -69,3 +69,9 @@ vite.config.*.timestamp-*
 !.yarn/sdks
 !.yarn/versions
 .pnp.* 
+
+# Test
+test/__snapshots__/
+
+# Zip files
+*.zip

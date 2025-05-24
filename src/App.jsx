@@ -14,7 +14,7 @@ function App() {
   const [fontWeight, setFontWeight] = useState(400);
   const [fontFamily, setFontFamily] = useState("Arial");
   const [wordList, setWordList] = useState([]);
-  const [styleYaml, setStyleYaml] = useState("");
+  const [yamlText, setYamlText] = useState("");
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -75,7 +75,7 @@ function App() {
         fontWeight={fontWeight}
         fontFamily={fontFamily}
         wordList={wordList}
-        styleYaml={styleYaml}
+        yamlText={yamlText}
       />
     </div>
   );
