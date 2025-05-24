@@ -16,7 +16,7 @@
   color: #007bff;
 }
 
-.fontListContainer {
+.selectorContainer {
   position: absolute;
   top: 100%;
   left: 50%;
@@ -27,49 +27,33 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 200px;
-  max-width: 300px;
+  max-height: 300px;
+}
+
+.selectorInner {
+  position: relative;
+  padding: 8px;
 }
 
 .fontList {
-  max-height: 300px;
+  max-height: 250px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  scrollbar-width: thin;
 }
 
-.fontList::-webkit-scrollbar {
-  width: 8px;
-}
-
-.fontList::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.fontList::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.fontList::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.fontItem {
+.fontOption {
   padding: 8px 12px;
   cursor: pointer;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
   color: #000000;
-  font-size: 14px;
 }
 
-.fontItem:hover {
+.fontOption:hover {
   background-color: #f0f0f0;
 }
 
-.fontItem.selected {
-  background-color: #e3f2fd;
-  color: #007bff;
+.selected {
+  background-color: #e6f7ff;
+  font-weight: bold;
 }

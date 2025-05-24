@@ -1,0 +1,5 @@
+type: regex
+pattern: "\b[sS]omething\b"
+style:
+  color: red
+  fontWeight: 700

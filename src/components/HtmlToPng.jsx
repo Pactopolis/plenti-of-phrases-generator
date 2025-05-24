@@ -3,13 +3,15 @@ import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { processStyleFile } from "../helpers/StyleFiles";
 
 const HtmlToPng = ({
   content,
   textColor,
   fontWeight,
-  fontFamily,
+  fontFamily = "Arial",
   wordList = [],
+  styleYaml = "",
 }) => {
   const contentRef = useRef(null);
   const containerRef = useRef(null);
@@ -23,28 +25,23 @@ const HtmlToPng = ({
     const node = contentRef.current;
     if (!node) return;
 
-    // Check if content contains the key pattern
     const hasKeyPattern =
       typeof content === "string" && content.includes("!{word}");
 
-    // If we have a key pattern and words in the list, create multiple images
     if (hasKeyPattern && wordList.length > 0) {
       await downloadMultipleImages(node, content);
     } else {
-      // Otherwise download a single image
       await downloadSingleImage(node);
     }
   };
 
   const downloadSingleImage = async (node) => {
-    // Store original styles
     const originalTransform = node.style.transform;
     const originalPosition = node.style.position;
     const originalLeft = node.style.left;
     const originalBackground = node.style.background;
     const originalBorder = node.style.border;
 
-    // Disable transform temporarily
     node.style.transform = "none";
     node.style.position = "relative";
     node.style.left = "0";
@@ -53,7 +50,6 @@ const HtmlToPng = ({
 
     try {
       const rect = node.getBoundingClientRect();
-
       const canvas = await html2canvas(node, {
         backgroundColor: null,
         scale: 2,
@@ -71,7 +67,6 @@ const HtmlToPng = ({
     } catch (error) {
       console.error("Error generating PNG:", error);
     } finally {
-      // Restore original styles
       node.style.transform = originalTransform;
       node.style.position = originalPosition;
       node.style.left = originalLeft;
@@ -81,14 +76,12 @@ const HtmlToPng = ({
   };
 
   const downloadMultipleImages = async (node, originalContent) => {
-    // Store original styles
     const originalTransform = node.style.transform;
     const originalPosition = node.style.position;
     const originalLeft = node.style.left;
     const originalBackground = node.style.background;
     const originalBorder = node.style.border;
 
-    // Disable transform temporarily
     node.style.transform = "none";
     node.style.position = "relative";
     node.style.left = "0";
@@ -98,20 +91,11 @@ const HtmlToPng = ({
     try {
       const zip = new JSZip();
       const rect = node.getBoundingClientRect();
-
-      // Create a folder for the images
       const imgFolder = zip.folder("images");
 
-      const originalText = originalContent;
-
       for (const word of wordList) {
-        // Replace !{word} with actual word
-        const replaced = originalText.replace(/!{word}/g, word);
-
-        // Update rendered content via React
+        const replaced = originalContent.replace(/!{word}/g, word);
         setRenderedContent(replaced);
-
-        // Give React time to update the DOM
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         const canvas = await html2canvas(node, {
@@ -123,9 +107,9 @@ const HtmlToPng = ({
           height: rect.height,
         });
 
-        const blob = await new Promise((resolve) => {
-          canvas.toBlob(resolve, "image/png");
-        });
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png")
+        );
 
         imgFolder.file(`${word}.png`, blob);
       }
@@ -135,7 +119,6 @@ const HtmlToPng = ({
     } catch (error) {
       console.error("Error generating multiple PNGs:", error);
     } finally {
-      // Restore original content and styles
       setRenderedContent(originalContent);
       node.style.transform = originalTransform;
       node.style.position = originalPosition;
@@ -145,26 +128,57 @@ const HtmlToPng = ({
     }
   };
 
-  // Handle string content by splitting it into clickable words
   const renderContent = () => {
-    if (typeof content === "string") {
-      return content.split(" ").map((word, index) => (
-        <span
-          key={index}
-          onClick={() => console.log(word)}
-          style={{
-            cursor: "pointer",
-            marginRight: "4px",
-            userSelect: "none",
-          }}
-        >
-          {word}
-        </span>
-      ));
+    if (typeof renderedContent === "string") {
+      try {
+        if (!styleYaml?.trim()) {
+          // Return plain spans if no styleYaml is provided
+          return renderedContent.split(" ").map((word, index) => (
+            <span
+              key={index}
+              style={{
+                fontWeight: fontWeight || 400,
+                color: textColor || "black",
+                fontFamily: fontFamily || "Arial",
+                cursor: "pointer",
+                userSelect: "none",
+                marginRight: "4px",
+              }}
+            >
+              {word + " "}
+            </span>
+          ));
+        }
+
+        // Process YAML styles and return styled spans
+        const styledSpans = processStyleFile(styleYaml, renderedContent);
+        // Give default styles to the spans not affected by YAML styles
+        return styledSpans.map((span, i) => {
+          const style = span.props?.style || {};
+          return (
+            <span
+              key={i}
+              style={{
+                fontWeight: fontWeight || 400,
+                color: textColor || "black",
+                fontFamily: fontFamily || "Arial",
+                cursor: "pointer",
+                userSelect: "none",
+                marginRight: "4px",
+                ...style, // YAML styles override props
+              }}
+            >
+              {span.props?.children}
+            </span>
+          );
+        });
+      } catch (error) {
+        console.error("Failed to render styled content:", error);
+        return renderedContent;
+      }
     }
 
-    // If content is a JSX element or other non-string, render it as-is
-    return content;
+    return renderedContent;
   };
 
   return (
@@ -200,8 +214,8 @@ const HtmlToPng = ({
             border: "1px solid rgba(0, 0, 0, 0.1)",
             resize: "both",
             overflow: "auto",
-            scrollbarWidth: "none", // Firefox
-            msOverflowStyle: "none", // IE 10+
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
             minWidth: "200px",
             minHeight: "100px",
             maxWidth: "100%",
@@ -221,35 +235,22 @@ const HtmlToPng = ({
               alignItems: "center",
               justifyContent: "center",
               overflow: "auto",
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE 10+
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
             <p
               style={{
                 fontSize: "20px",
-                color: textColor || "black",
-                fontWeight: fontWeight || 400,
-                fontFamily: fontFamily || "Arial",
-                margin: 0, // Remove default margin
-                padding: 0, // Ensure no padding
-                lineHeight: 1.2, // Optional: tight line spacing
+                margin: 0,
+                padding: 0,
+                lineHeight: 1.2,
                 maxWidth: "100%",
                 textAlign: "center",
                 overflowWrap: "break-word",
               }}
             >
-              {typeof renderedContent === "string"
-                ? renderedContent.split(" ").map((word, index) => (
-                    <span
-                      key={index}
-                      onClick={() => console.log(word)}
-                      style={{ cursor: "pointer", userSelect: "none" }}
-                    >
-                      {word + " "}
-                    </span>
-                  ))
-                : renderedContent}
+              {renderContent()}
             </p>
           </div>
         </div>
@@ -272,25 +273,13 @@ const HtmlToPng = ({
           ? "Download as ZIP"
           : "Download as PNG"}
       </button>
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#666",
-          marginTop: "8px",
-        }}
-      >
+      <div style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
         Drag the bottom-right corner to resize
       </div>
       {wordList.length > 0 &&
         typeof content === "string" &&
         content.includes("!{word}") && (
-          <div
-            style={{
-              fontSize: "12px",
-              color: "#666",
-              marginTop: "4px",
-            }}
-          >
+          <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
             Will create {wordList.length} images with !{"{word}"} replaced
           </div>
         )}

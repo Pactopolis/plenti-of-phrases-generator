@@ -4,9 +4,9 @@ import "./App.css";
 import HtmlToPng from "./components/HtmlToPng";
 import ColorPicker from "./components/ColorPicker";
 import BoldSlider from "./components/BoldSlider";
+import FontSelector from "./components/FontSelector";
 import WordList from "./components/WordList";
 import WordsUpload from "./components/WordsUpload";
-import FontSelector from "./components/FontSelector";
 
 function App() {
   const [inputText, setInputText] = useState("");
@@ -14,6 +14,7 @@ function App() {
   const [fontWeight, setFontWeight] = useState(400);
   const [fontFamily, setFontFamily] = useState("Arial");
   const [wordList, setWordList] = useState([]);
+  const [styleYaml, setStyleYaml] = useState("");
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -74,6 +75,7 @@ function App() {
         fontWeight={fontWeight}
         fontFamily={fontFamily}
         wordList={wordList}
+        styleYaml={styleYaml}
       />
     </div>
   );
