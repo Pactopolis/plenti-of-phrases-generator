@@ -20,7 +20,7 @@ describe("HtmlToPng Component", () => {
 
   const styleYaml = `
 type: regex
-pattern: "\\\\b\\\\w+\\\\b"
+pattern: '\\b\\w+\\b'
 style:
   color: red
 `;
@@ -162,12 +162,11 @@ style:
   });
 });
 
-// 🔧 NEW: YAML-specific style tests
 describe("HtmlToPng YAML styling", () => {
   const styledContent = "I was running and eating.";
   const styleYaml = `
 type: regex
-pattern: "\\\\b\\\\w+ing\\\\b"
+pattern: '\\b\\w+ing\\b'
 style:
   color: purple
   fontWeight: bold
@@ -200,7 +199,6 @@ style:
 
     render(<HtmlToPng content={styledContent} styleYaml={invalidYaml} />);
 
-    // Only one fallback span with the entire text should be rendered
     const fallbackSpan = screen.getByText(styledContent);
     expect(fallbackSpan).toBeInTheDocument();
   });
@@ -217,7 +215,7 @@ style:
     const content = "I am highlighting this word.";
     const yaml = `
   type: regex
-  pattern: "\\\\bhighlighting\\\\b"
+  pattern: '\\bhighlighting\\b'
   style:
     color: red
     fontWeight: bold
@@ -232,18 +230,16 @@ style:
       />
     );
 
-    // Check YAML-styled word
     const highlighted = screen.getByText("highlighting");
     const highlightedStyle = getComputedStyle(highlighted);
     expect(highlightedStyle.color).toBe("rgb(255, 0, 0)");
     expect(highlightedStyle.fontWeight).toMatch(/bold|700/i);
 
-    // Check non-YAML words inherit props
     const otherWords = ["I", "am", "this", "word."];
     for (const word of otherWords) {
       const el = screen.getByText(word);
       const style = getComputedStyle(el);
-      expect(style.color).toBe("rgb(0, 128, 0)"); // green
+      expect(style.color).toBe("rgb(0, 128, 0)");
       expect(style.fontWeight).toBe("100");
     }
   });
